@@ -1,4 +1,5 @@
-# Game display v3 - creating global variables for colour and font
+# Llama sprite v2 - setting background colour to white and adding ground level
+# to same height as llama's level
 
 import pygame
 
@@ -21,10 +22,21 @@ exit_font = pygame.font.Font("freesansbold.ttf", 30)
 
 quit_game = False
 
+llama_x = 50  # Setting Llama at left of screen
+llama_y = 220  # Y-height to be same as ground height
+llama_width = 20  # Width of llama block
+llama_height = 40  # Height of llama block
+
 while not quit_game:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             quit_game = True  # Exits when user presses 'X'
+    screen.fill(white)  # Screen/background colour set to white
+    pygame.draw.line(screen, black, (0, 260), (800, 260), 2)  # Drawing ground
+    # Create rectangle for llama
+    pygame.draw.rect(screen, red, [llama_x, llama_y, llama_width,
+                                   llama_height])
+    pygame.display.update()
 
 pygame.quit()
 quit()
