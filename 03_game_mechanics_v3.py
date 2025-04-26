@@ -1,4 +1,5 @@
-# Game mechanics v1 - adding jumping function and simulating gravity for llama
+# Game mechanics v2 - simulating moving background and adding blocks
+# (will be changed to cacti) to show background moving
 
 import pygame
 
@@ -31,9 +32,20 @@ llama_height = 40  # Height of llama block
 jumping = False
 velocity_y = 0
 gravity = 1
-jump_height = 15
+jump_height = 12
 ground_y = 220  # Same as original llama_y
 
+# Background scrolling
+scroll_speed = 5
+ground_scroll = 0
+
+# Cactus block placeholders
+cactus_width = 20
+cactus_height = 40
+cactus_color = green
+
+# List of cactus positions to test to see if screen is moving
+cacti = [{"x": 600, "y": 220}, {"x": 900, "y": 220}, {"x": 1200, "y": 220}]
 while not quit_game:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -44,7 +56,15 @@ while not quit_game:
                 jumping = True
                 velocity_y -= jump_height
     screen.fill(white)  # Screen/background colour set to white
-    pygame.draw.line(screen, black, (0, 260), (800, 260), 2)  # Drawing ground
+    # Move the ground line to create moving background effect
+    ground_scroll -= scroll_speed
+    if abs(ground_scroll) >= 800:
+        ground_scroll = 0
+
+    # Draw repeated ground lines to simulate moving background
+    for i in range(2):  # Draw two ground lines to cover full width
+        pygame.draw.line(screen, black, (ground_scroll + i * 800, 260),
+                         (ground_scroll + i * 800 + 800, 260), 2)
     #  Using a sprite (instead of the previous rectangle) to represent llama
     block = pygame.Rect(llama_x, llama_y, llama_width, llama_height)
     llama = pygame.image.load('Llama.png').convert_alpha()
@@ -62,6 +82,13 @@ while not quit_game:
             llama_y = ground_y
             jumping = False
             velocity_y = 0
+    # Move and draw cacti blocks
+    for cactus in cacti:
+        cactus["x"] -= scroll_speed  # Move cactus left
+        if cactus["x"] < -cactus_width:  # If off-screen, reset to right
+            cactus["x"] = 800 + 200  # Move it further to right (spacing)
+        pygame.draw.rect(screen, cactus_color, (cactus["x"], cactus["y"],
+                                                cactus_width, cactus_height))
     pygame.display.update()
     clock.tick(60)  # Maximum of 60 fps (frames per second)
 
