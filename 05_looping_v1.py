@@ -1,4 +1,4 @@
-# Cactus sprite v3 - Creating random locations for cacti
+#  Looping v1 - converting main loop to a function
 
 import pygame
 import random
@@ -50,55 +50,52 @@ cacti = []
 spawn_delay = 90  # frames
 spawn_timer = 0
 
-
-# Main game loop as a function
+# Function to run the main game loop
 def game_loop():
-    global llama_y, jumping, velocity_y, ground_scroll, cacti, spawn_timer
-
-    llama_y = 220
-    jumping = False
-    velocity_y = 0
-    ground_scroll = 0
-    cacti = []
-    spawn_timer = 0
-
     quit_game = False
     while not quit_game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+                quit_game = True  # Exits when user presses 'X'
             if event.type == pygame.KEYDOWN:
-                if (event.key == pygame.K_SPACE or event.key == pygame.K_UP) and not jumping:
+                if (event.key == pygame.K_SPACE or event.key == pygame.K_UP) and \
+                        not jumping:  # Allows jump for both space and up arrow
                     jumping = True
                     velocity_y -= jump_height
-
-        screen.fill(white)
+        screen.fill(white)  # Screen/background colour set to white
+        # Move the ground line to create moving background effect
         ground_scroll -= scroll_speed
         if abs(ground_scroll) >= 800:
             ground_scroll = 0
 
-        for i in range(2):
+        # Draw repeated ground lines to simulate moving background
+        for i in range(2):  # Draw two ground lines to cover full width
             pygame.draw.line(screen, black, (ground_scroll + i * 800, 260),
                              (ground_scroll + i * 800 + 800, 260), 2)
-
+        #  Using a sprite (instead of the previous rectangle) to represent llama
         block = pygame.Rect(llama_x, llama_y, llama_width, llama_height)
         llama = pygame.image.load('Llama.png').convert_alpha()
-        resized_llama = pygame.transform.smoothscale(llama, [llama_width, llama_height])
+        resized_llama = pygame.transform.smoothscale(llama, [llama_width,
+                                                             llama_height])
         screen.blit(resized_llama, block)
 
+        # Gravity + Jump physics
         if jumping:
             llama_y += velocity_y
             velocity_y += gravity
+
+            # Stop jump when llama hits the ground
             if llama_y >= ground_y:
                 llama_y = ground_y
                 jumping = False
                 velocity_y = 0
+        # Create a rect for the llama each frame
+        llama_hitbox = pygame.Rect(llama_x + 3, llama_y + 5,
+                                   llama_width - 6, llama_height - 10)  # Adjusting
+        # for hitbox issues
+        pygame.draw.rect(screen, red, llama_hitbox, 2)  # For hitbox testing
 
-        llama_hitbox = pygame.Rect(llama_x + 3, llama_y + 5, llama_width - 6, llama_height - 10)
-        pygame.draw.rect(screen, red, llama_hitbox, 2)
-
-        min_cactus_gap = 150
+        min_cactus_gap = 150  # minimum pixels between cacti
         spawn_timer += 1
         if spawn_timer > spawn_delay:
             if not cacti or cacti[-1]["x"] < (800 - min_cactus_gap):
@@ -106,24 +103,28 @@ def game_loop():
                 cacti.append({"x": cactus_x, "y": 220})
                 spawn_timer = 0
 
+        # Move and draw cacti blocks
         for cactus in cacti[:]:
-            cactus["x"] -= scroll_speed
-            cactus_rect = pygame.Rect(cactus["x"], cactus["y"], cactus_width, cactus_height)
+            cactus["x"] -= scroll_speed  # move left
+            cactus_rect = pygame.Rect(cactus["x"], cactus["y"], cactus_width,
+                                      cactus_height)
             screen.blit(cactus_img, (cactus["x"], cactus["y"]))
-            pygame.draw.rect(screen, black, cactus_rect, 2)
+            pygame.draw.rect(screen, black, cactus_rect, 2)  # Hitbox testing
 
+            # Collision detection
             if llama_hitbox.colliderect(cactus_rect):
                 print("Game Over")
-                return  # Exit game_loop and allow restart later
+                quit_game = True
 
+            # Remove cactus if it moves off-screen
             if cactus["x"] < -cactus_width:
                 cacti.remove(cactus)
 
         pygame.display.update()
-        clock.tick(60)
+        clock.tick(60)  # Maximum of 60 fps (frames per second)
 
-# === Main Game Loop Controller ===
-while True:
-    game_loop()
-    # You can add a restart screen here later
-    # For now, it immediately restarts the game
+pygame.quit()
+quit()
+
+# Main loop
+game_loop()

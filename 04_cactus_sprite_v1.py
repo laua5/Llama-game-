@@ -1,4 +1,4 @@
-# Game mechanics v3 - Adds basic collision detection, ends game upon collision
+# Cactus sprite v1 - Adding cactus sprite to replace cactus blocks
 
 import pygame
 
@@ -41,7 +41,9 @@ ground_scroll = 0
 # Cactus block placeholders
 cactus_width = 20
 cactus_height = 40
-cactus_color = green
+cactus_img = pygame.image.load('cactus.png').convert_alpha()
+cactus_img = pygame.transform.smoothscale(cactus_img, (cactus_width,
+                                                       cactus_height))
 
 # List of cactus positions to test to see if screen is moving
 cacti = [{"x": 600, "y": 220}, {"x": 900, "y": 220}, {"x": 1200, "y": 220}]
@@ -90,7 +92,7 @@ while not quit_game:
             cactus["x"] = 800 + 200  # Move it further to right (spacing)
         cactus_rect = pygame.Rect(cactus["x"], cactus["y"], cactus_width,
                                   cactus_height)
-        pygame.draw.rect(screen, cactus_color, cactus_rect)
+        screen.blit(cactus_img, (cactus["x"], cactus["y"]))
         # Check collision
         if llama_rect.colliderect(cactus_rect):
             print("Collision detected!")  # For now just print

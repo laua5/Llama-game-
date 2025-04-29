@@ -1,4 +1,5 @@
-# Game mechanics v3 - Adds basic collision detection, ends game upon collision
+# Cactus sprite v2 - Adjusting cacti dimensions to fit sprite image, fixing
+# hitboxes
 
 import pygame
 
@@ -39,9 +40,11 @@ scroll_speed = 5
 ground_scroll = 0
 
 # Cactus block placeholders
-cactus_width = 20
+cactus_width = 40
 cactus_height = 40
-cactus_color = green
+cactus_img = pygame.image.load('cactus.png').convert_alpha()
+cactus_img = pygame.transform.smoothscale(cactus_img, (cactus_width,
+                                                       cactus_height))
 
 # List of cactus positions to test to see if screen is moving
 cacti = [{"x": 600, "y": 220}, {"x": 900, "y": 220}, {"x": 1200, "y": 220}]
@@ -82,7 +85,10 @@ while not quit_game:
             jumping = False
             velocity_y = 0
     # Create a rect for the llama each frame
-    llama_rect = pygame.Rect(llama_x, llama_y, llama_width, llama_height)
+    llama_hitbox = pygame.Rect(llama_x + 3, llama_y + 5,
+                               llama_width - 6, llama_height - 10)  # Adjusting
+    # for hitbox issues
+
     # Move and draw cacti blocks
     for cactus in cacti:
         cactus["x"] -= scroll_speed  # Move cactus left
@@ -90,9 +96,9 @@ while not quit_game:
             cactus["x"] = 800 + 200  # Move it further to right (spacing)
         cactus_rect = pygame.Rect(cactus["x"], cactus["y"], cactus_width,
                                   cactus_height)
-        pygame.draw.rect(screen, cactus_color, cactus_rect)
+        screen.blit(cactus_img, (cactus["x"], cactus["y"]))
         # Check collision
-        if llama_rect.colliderect(cactus_rect):
+        if llama_hitbox.colliderect(cactus_rect):
             print("Collision detected!")  # For now just print
             quit_game = True  # Optionally end game on collision
     pygame.display.update()

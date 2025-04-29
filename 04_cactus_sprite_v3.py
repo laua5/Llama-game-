@@ -1,6 +1,8 @@
-# Game mechanics v3 - Adds basic collision detection, ends game upon collision
+# Cactus sprite v3 - Creating random locations for cacti
 
 import pygame
+import random
+
 
 pygame.init()
 
@@ -31,7 +33,7 @@ llama_height = 40  # Height of llama block
 jumping = False
 velocity_y = 0
 gravity = 1
-jump_height = 12
+jump_height = 18
 ground_y = 220  # Same as original llama_y
 
 # Background scrolling
@@ -39,12 +41,15 @@ scroll_speed = 5
 ground_scroll = 0
 
 # Cactus block placeholders
-cactus_width = 20
+cactus_width = 40
 cactus_height = 40
-cactus_color = green
+cactus_img = pygame.image.load('cactus.png').convert_alpha()
+cactus_img = pygame.transform.smoothscale(cactus_img, (cactus_width,
+                                                       cactus_height))
+cacti = []
+spawn_delay = 90  # frames
+spawn_timer = 0
 
-# List of cactus positions to test to see if screen is moving
-cacti = [{"x": 600, "y": 220}, {"x": 900, "y": 220}, {"x": 1200, "y": 220}]
 while not quit_game:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -82,19 +87,36 @@ while not quit_game:
             jumping = False
             velocity_y = 0
     # Create a rect for the llama each frame
-    llama_rect = pygame.Rect(llama_x, llama_y, llama_width, llama_height)
+    llama_hitbox = pygame.Rect(llama_x + 3, llama_y + 5,
+                               llama_width - 6, llama_height - 10)  # Adjusting
+    # for hitbox issues
+    pygame.draw.rect(screen, red, llama_hitbox, 2)  # For hitbox testing
+
+    min_cactus_gap = 150  # minimum pixels between cacti
+    spawn_timer += 1
+    if spawn_timer > spawn_delay:
+        if not cacti or cacti[-1]["x"] < (800 - min_cactus_gap):
+            cactus_x = 800 + random.randint(0, 100)
+            cacti.append({"x": cactus_x, "y": 220})
+            spawn_timer = 0
+
     # Move and draw cacti blocks
-    for cactus in cacti:
-        cactus["x"] -= scroll_speed  # Move cactus left
-        if cactus["x"] < -cactus_width:  # If off-screen, reset to right
-            cactus["x"] = 800 + 200  # Move it further to right (spacing)
+    for cactus in cacti[:]:
+        cactus["x"] -= scroll_speed  # move left
         cactus_rect = pygame.Rect(cactus["x"], cactus["y"], cactus_width,
                                   cactus_height)
-        pygame.draw.rect(screen, cactus_color, cactus_rect)
-        # Check collision
-        if llama_rect.colliderect(cactus_rect):
-            print("Collision detected!")  # For now just print
-            quit_game = True  # Optionally end game on collision
+        screen.blit(cactus_img, (cactus["x"], cactus["y"]))
+        pygame.draw.rect(screen, black, cactus_rect, 2)  # Hitbox testing
+
+        # Collision detection
+        if llama_hitbox.colliderect(cactus_rect):
+            print("Game Over")
+            quit_game = True
+
+        # Remove cactus if it moves off-screen
+        if cactus["x"] < -cactus_width:
+            cacti.remove(cactus)
+
     pygame.display.update()
     clock.tick(60)  # Maximum of 60 fps (frames per second)
 

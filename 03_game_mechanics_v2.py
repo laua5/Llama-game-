@@ -25,7 +25,7 @@ quit_game = False
 
 llama_x = 50  # Setting Llama at left of screen
 llama_y = 220  # Y-height to be same as ground height
-llama_width = 20  # Width of llama block
+llama_width = 40  # Width of llama block
 llama_height = 40  # Height of llama block
 
 # Jumping mechanics
