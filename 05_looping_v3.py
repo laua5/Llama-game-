@@ -1,4 +1,5 @@
-# Looping v1 - adding main loop function, game restarts upon collision
+# Looping v3 - Handling response if user presses 'X' - giving them the
+# option to quit, start a new game, or keep playing
 
 import pygame
 import random
@@ -20,6 +21,7 @@ green = (188, 227, 199)
 # Fonts for the game
 score_font = pygame.font.SysFont("arialblack", 20)
 exit_font = pygame.font.Font("freesansbold.ttf", 30)
+msg_font = pygame.font.SysFont("arialblack,", 20)
 
 clock = pygame.time.Clock()
 
@@ -31,8 +33,18 @@ cactus_img = pygame.transform.smoothscale(cactus_img, (cactus_width,
                                                        cactus_height))
 
 
+# To put messages on the screen (from snake game)
+def message(msg, txt_colour, bkgd_colour):
+    txt = msg_font.render(msg, True, txt_colour, bkgd_colour)
+
+    # Centre rectangle: 800/2 = 400 and 300/2 = 15
+    text_box = txt.get_rect(center=(400, 150))
+    screen.blit(txt, text_box)
+
+
 def game_loop():
     quit_game = False
+    game_over = False
     # Jumping Mechanics
     jumping = False
     velocity_y = 0
@@ -53,6 +65,47 @@ def game_loop():
     spawn_delay = 90  # frames
     spawn_timer = 0
     while not quit_game:
+        # Give user the option to quit or play again when they die
+        while game_over:
+            screen.fill(white)
+            message("You died! Press 'Q' to play Quit or 'A' to play again",
+                    black, white)
+            pygame.display.update()
+
+            # Check if user wants to quit (Q) or play again (A)
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        quit_game = True
+                        game_over = False
+                    if event.key == pygame.K_a:
+                        game_loop()  # Restart the main game loop
+        # Handling response if user presses 'X' - giving them the option to
+        # quit, start a new game, or keep playing
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                instructions = "Exit: X to Quit, R to reset"
+                message(instructions, white, black)
+                pygame.display.update()
+
+                end = False
+                while not end:
+                    for event in pygame.event.get():
+                        #  If user presses X button, game quits
+                        if event.type == pygame.QUIT:
+                            quit_game = True
+                            end = True
+
+                        #  If user presses 'R' button again, game is reset
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_r:
+                                end = True, game_loop()
+
+                            #  If user presses 'Q' game quits
+                            if event.key == pygame.K_q:
+                                quit_game = True
+                                end = True
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit_game = True  # Exits when user presses 'X'
@@ -113,8 +166,7 @@ def game_loop():
 
             # Collision detection
             if llama_hitbox.colliderect(cactus_rect):
-                print("Game Over")
-                quit_game = True
+                game_over = True
 
             # Remove cactus if it moves off-screen
             if cactus["x"] < -cactus_width:
@@ -123,7 +175,9 @@ def game_loop():
         pygame.display.update()
         clock.tick(60)  # Maximum of 60 fps (frames per second)
 
+    pygame.quit()
+    quit()
+
 
 # Main loop
-while True:
-    game_loop()  # Game loop restarts immediately upon collision
+game_loop()

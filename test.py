@@ -33,7 +33,7 @@ llama_height = 40  # Height of llama block
 jumping = False
 velocity_y = 0
 gravity = 1
-jump_height = 18
+jump_height = 12
 ground_y = 220  # Same as original llama_y
 
 # Background scrolling

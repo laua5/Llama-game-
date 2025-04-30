@@ -1,4 +1,4 @@
-# Looping v1 - adding main loop function, game restarts upon collision
+# Scoring v3 - updates high score and displays high score
 
 import pygame
 import random
@@ -20,6 +20,7 @@ green = (188, 227, 199)
 # Fonts for the game
 score_font = pygame.font.SysFont("arialblack", 20)
 exit_font = pygame.font.Font("freesansbold.ttf", 30)
+msg_font = pygame.font.SysFont("arialblack,", 20)
 
 clock = pygame.time.Clock()
 
@@ -31,8 +32,57 @@ cactus_img = pygame.transform.smoothscale(cactus_img, (cactus_width,
                                                        cactus_height))
 
 
+# Function to keep track of highest score - writes value to a file (from snake
+# game)
+def load_highest_score():
+    try:
+        hi_score_file = open("Hi_score.text", 'r')
+    except IOError:
+        hi_score_file = open("Hi_score.text", 'w')
+        hi_score_file.write("0")
+    hi_score_file = open("HI_score.text", 'r')
+    value = hi_score_file.read()
+    hi_score_file.close()
+    return value
+
+
+# Function to update record of the highest score
+def update_high_score(score, high_score):
+    if int(score) > int(high_score):
+        return score
+    else:
+        return high_score
+
+
+# Save updated high score if player beats it
+def save_high_score(high_score):
+    high_score_file = open("HI_score.text", 'w')
+    high_score_file.write(str(high_score))
+    high_score_file.close()
+
+
+# Display player score throughout the game (from snake game)
+def player_score(score, score_colour, hi_score):
+    display_score = score_font.render(f"Score: {score}", True, score_colour)
+    screen.blit(display_score, (680, 20))  # Coordinates for top right
+    # High Score
+    display_score = score_font.render(f"High Score: {hi_score}", True,
+                                      score_colour)
+    screen.blit(display_score, (10, 20))  # Coordinates for top right
+
+
+# To put messages on the screen (from snake game)
+def message(msg, txt_colour, bkgd_colour):
+    txt = msg_font.render(msg, True, txt_colour, bkgd_colour)
+
+    # Centre rectangle: 800/2 = 400 and 300/2 = 15
+    text_box = txt.get_rect(center=(400, 150))
+    screen.blit(txt, text_box)
+
+
 def game_loop():
     quit_game = False
+    game_over = False
     # Jumping Mechanics
     jumping = False
     velocity_y = 0
@@ -52,7 +102,27 @@ def game_loop():
     cacti = []
     spawn_delay = 90  # frames
     spawn_timer = 0
+    start_time = pygame.time.get_ticks()  # Start counting time
+    # Load the high score
+    high_score = load_highest_score()
     while not quit_game:
+        # Give user the option to quit or play again when they die
+        while game_over:
+            save_high_score(high_score)
+            screen.fill(white)
+            message("You died! Press 'Q' to play Quit or 'A' to play again",
+                    black, white)
+            pygame.display.update()
+
+            # Check if user wants to quit (Q) or play again (A)
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_q:
+                        quit_game = True
+                        game_over = False
+                    if event.key == pygame.K_a:
+                        game_loop()  # Restart the main game loop
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit_game = True  # Exits when user presses 'X'
@@ -102,6 +172,13 @@ def game_loop():
                 cactus_x = 800 + random.randint(0, 100)
                 cacti.append({"x": cactus_x, "y": 220})
                 spawn_timer = 0
+        # Calculate score as seconds passed since start of game
+        current_time = pygame.time.get_ticks()
+        score = (current_time - start_time) // 1000  # Convert ms to seconds
+        player_score(score, black, high_score)  # Show score on screen
+
+        #  Get high score
+        high_score = update_high_score(score, high_score)
 
         # Move and draw cacti blocks
         for cactus in cacti[:]:
@@ -113,8 +190,7 @@ def game_loop():
 
             # Collision detection
             if llama_hitbox.colliderect(cactus_rect):
-                print("Game Over")
-                quit_game = True
+                game_over = True
 
             # Remove cactus if it moves off-screen
             if cactus["x"] < -cactus_width:
@@ -123,7 +199,9 @@ def game_loop():
         pygame.display.update()
         clock.tick(60)  # Maximum of 60 fps (frames per second)
 
+    pygame.quit()
+    quit()
+
 
 # Main loop
-while True:
-    game_loop()  # Game loop restarts immediately upon collision
+game_loop()
