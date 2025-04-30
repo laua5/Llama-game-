@@ -1,4 +1,5 @@
-# Base v1 - increasing speed for difficulty
+# Base v1 - increasing speed for difficulty and changing sprite of llama
+# (feet movement)
 
 import pygame
 import random
@@ -87,7 +88,7 @@ def game_loop():
     jumping = False
     velocity_y = 0
     gravity = 1
-    jump_height = 18
+    jump_height = 15
     ground_y = 220  # Same as original llama_y
 
     llama_x = 50  # Setting Llama at left of screen
