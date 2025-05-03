@@ -1,4 +1,4 @@
-# Base v1 - increasing speed for difficulty
+# Llama game final version
 
 import pygame
 import random
@@ -101,6 +101,11 @@ def game_loop():
     max_scroll_speed = 12  # Max allowed speed
     ground_scroll = 0
 
+    # For showing Llama feet movement
+    animation_timer = 0
+    animation_frame = 0  # 0 or 1 for walking frames
+    animation_speed = 10  # Lower = faster switching
+
     cacti = []
     spawn_delay = 45  # frames
     spawn_timer = 0
@@ -124,16 +129,15 @@ def game_loop():
                         game_over = False
                     if event.key == pygame.K_a:
                         game_loop()  # Restart the main game loop
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit_game = True  # Exits when user presses 'X'
-            if event.type == pygame.KEYDOWN:
-                if (event.key == pygame.K_SPACE or event.key == pygame.K_UP) \
-                        and not jumping:  # Allows jump for both space and up
-                    # arrow
-                    jumping = True
-                    velocity_y -= jump_height
+        keys = pygame.key.get_pressed()
+        # Allows jump for both space and up arrow
+        if (keys[pygame.K_SPACE] or keys[pygame.K_UP]) and not jumping:
+            jumping = True
+            velocity_y -= jump_height
+
         screen.fill(white)  # Screen/background colour set to white
         # Move the ground line to create moving background effect
         ground_scroll -= scroll_speed
@@ -147,9 +151,27 @@ def game_loop():
         #  Using a sprite (instead of the previous square) to represent llama
         block = pygame.Rect(llama_x, llama_y, llama_width, llama_height)
         llama = pygame.image.load('Llama.png').convert_alpha()
-        resized_llama = pygame.transform.smoothscale(llama, [llama_width,
+        llama_walk_one = pygame.image.load('Llama2.png').convert_alpha()
+        llama_walk_two = pygame.image.load('Llama3.png').convert_alpha()
+        llama = pygame.transform.smoothscale(llama, [llama_width,
                                                              llama_height])
-        screen.blit(resized_llama, block)
+        llama_walk_one = pygame.transform.smoothscale(llama_walk_one, [llama_width,
+                                                             llama_height])
+        llama_walk_two = pygame.transform.smoothscale(llama_walk_two, [llama_width,
+                                                             llama_height])
+        # Update animation timer only if on the ground
+        if not jumping:
+            animation_timer += 1
+            if animation_timer >= animation_speed:
+                animation_frame = 1 - animation_frame  # Toggle between 0 and 1
+                animation_timer = 0
+        if jumping:
+            current_sprite = llama
+        else:
+            current_sprite = llama_walk_one if animation_frame == 0 else \
+                llama_walk_two
+
+        screen.blit(current_sprite, block)
 
         # Gravity + Jump physics
         if jumping:

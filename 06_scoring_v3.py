@@ -87,7 +87,7 @@ def game_loop():
     jumping = False
     velocity_y = 0
     gravity = 1
-    jump_height = 18
+    jump_height = 15
     ground_y = 220  # Same as original llama_y
 
     llama_x = 50  # Setting Llama at left of screen
@@ -197,7 +197,7 @@ def game_loop():
                 cacti.remove(cactus)
 
         pygame.display.update()
-        clock.tick(60)  # Maximum of 60 fps (frames per second)
+        clock.tick(75)  # Maximum of 60 fps (frames per second)
 
     pygame.quit()
     quit()

@@ -1,4 +1,4 @@
-# Base v1 - increasing speed for difficulty
+# Base v1 - allowing holding key for jumping
 
 import pygame
 import random
@@ -124,16 +124,15 @@ def game_loop():
                         game_over = False
                     if event.key == pygame.K_a:
                         game_loop()  # Restart the main game loop
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit_game = True  # Exits when user presses 'X'
-            if event.type == pygame.KEYDOWN:
-                if (event.key == pygame.K_SPACE or event.key == pygame.K_UP) \
-                        and not jumping:  # Allows jump for both space and up
-                    # arrow
-                    jumping = True
-                    velocity_y -= jump_height
+        keys = pygame.key.get_pressed()
+        # Allows jump for both space and up arrow
+        if (keys[pygame.K_SPACE] or keys[pygame.K_UP]) and not jumping:
+            jumping = True
+            velocity_y -= jump_height
+
         screen.fill(white)  # Screen/background colour set to white
         # Move the ground line to create moving background effect
         ground_scroll -= scroll_speed

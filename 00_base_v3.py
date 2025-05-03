@@ -1,5 +1,4 @@
-# Looping v3 - Handling response if user presses 'X' - giving them the
-# option to quit, start a new game, or keep playing
+# Base v3 - allowing holding key for jumping
 
 import pygame
 import random
@@ -33,6 +32,45 @@ cactus_img = pygame.transform.smoothscale(cactus_img, (cactus_width,
                                                        cactus_height))
 
 
+# Function to keep track of highest score - writes value to a file (from snake
+# game)
+def load_highest_score():
+    try:
+        hi_score_file = open("Hi_score.text", 'r')
+    except IOError:
+        hi_score_file = open("Hi_score.text", 'w')
+        hi_score_file.write("0")
+    hi_score_file = open("HI_score.text", 'r')
+    value = hi_score_file.read()
+    hi_score_file.close()
+    return value
+
+
+# Function to update record of the highest score
+def update_high_score(score, high_score):
+    if int(score) > int(high_score):
+        return score
+    else:
+        return high_score
+
+
+# Save updated high score if player beats it
+def save_high_score(high_score):
+    high_score_file = open("HI_score.text", 'w')
+    high_score_file.write(str(high_score))
+    high_score_file.close()
+
+
+# Display player score throughout the game (from snake game)
+def player_score(score, score_colour, hi_score):
+    display_score = score_font.render(f"Score: {score}", True, score_colour)
+    screen.blit(display_score, (680, 20))  # Coordinates for top right
+    # High Score
+    display_score = score_font.render(f"High Score: {hi_score}", True,
+                                      score_colour)
+    screen.blit(display_score, (10, 20))  # Coordinates for top right
+
+
 # To put messages on the screen (from snake game)
 def message(msg, txt_colour, bkgd_colour):
     txt = msg_font.render(msg, True, txt_colour, bkgd_colour)
@@ -49,7 +87,7 @@ def game_loop():
     jumping = False
     velocity_y = 0
     gravity = 1
-    jump_height = 18
+    jump_height = 15
     ground_y = 220  # Same as original llama_y
 
     llama_x = 50  # Setting Llama at left of screen
@@ -59,14 +97,25 @@ def game_loop():
 
     # Background scrolling
     scroll_speed = 5
+    speed_increase_interval = 10  # Every 10 seconds
+    max_scroll_speed = 12  # Max allowed speed
     ground_scroll = 0
 
+    # For showing Llama feet movement
+    animation_timer = 0
+    animation_frame = 0  # 0 or 1 for walking frames
+    animation_speed = 10  # Lower = faster switching
+
     cacti = []
-    spawn_delay = 90  # frames
+    spawn_delay = 45  # frames
     spawn_timer = 0
+    start_time = pygame.time.get_ticks()  # Start counting time
+    # Load the high score
+    high_score = load_highest_score()
     while not quit_game:
         # Give user the option to quit or play again when they die
         while game_over:
+            save_high_score(high_score)
             screen.fill(white)
             message("You died! Press 'Q' to play Quit or 'A' to play again",
                     black, white)
@@ -80,41 +129,15 @@ def game_loop():
                         game_over = False
                     if event.key == pygame.K_a:
                         game_loop()  # Restart the main game loop
-        # Handling response if user presses 'X' - giving them the option to
-        # quit, start a new game, or keep playing
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                instructions = "Exit: X to Quit, R to reset"
-                message(instructions, white, black)
-                pygame.display.update()
-
-                end = False
-                while not end:
-                    for event in pygame.event.get():
-                        #  If user presses X button, game quits
-                        if event.type == pygame.QUIT:
-                            quit_game = True
-                            end = True
-
-                        #  If user presses 'R' button again, game is reset
-                        if event.type == pygame.KEYDOWN:
-                            if event.key == pygame.K_r:
-                                end = True, game_loop()
-
-                            #  If user presses 'Q' game quits
-                            if event.key == pygame.K_q:
-                                quit_game = True
-                                end = True
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit_game = True  # Exits when user presses 'X'
-            if event.type == pygame.KEYDOWN:
-                if (event.key == pygame.K_SPACE or event.key == pygame.K_UP) \
-                        and not jumping:  # Allows jump for both space and up
-                    # arrow
-                    jumping = True
-                    velocity_y -= jump_height
+        keys = pygame.key.get_pressed()
+        # Allows jump for both space and up arrow
+        if (keys[pygame.K_SPACE] or keys[pygame.K_UP]) and not jumping:
+            jumping = True
+            velocity_y -= jump_height
+
         screen.fill(white)  # Screen/background colour set to white
         # Move the ground line to create moving background effect
         ground_scroll -= scroll_speed
@@ -128,9 +151,27 @@ def game_loop():
         #  Using a sprite (instead of the previous square) to represent llama
         block = pygame.Rect(llama_x, llama_y, llama_width, llama_height)
         llama = pygame.image.load('Llama.png').convert_alpha()
-        resized_llama = pygame.transform.smoothscale(llama, [llama_width,
+        llama_walk_one = pygame.image.load('Llama2.png').convert_alpha()
+        llama_walk_two = pygame.image.load('Llama3.png').convert_alpha()
+        llama = pygame.transform.smoothscale(llama, [llama_width,
                                                              llama_height])
-        screen.blit(resized_llama, block)
+        llama_walk_one = pygame.transform.smoothscale(llama_walk_one, [llama_width,
+                                                             llama_height])
+        llama_walk_two = pygame.transform.smoothscale(llama_walk_two, [llama_width,
+                                                             llama_height])
+        # Update animation timer only if on the ground
+        if not jumping:
+            animation_timer += 1
+            if animation_timer >= animation_speed:
+                animation_frame = 1 - animation_frame  # Toggle between 0 and 1
+                animation_timer = 0
+        if jumping:
+            current_sprite = llama
+        else:
+            current_sprite = llama_walk_one if animation_frame == 0 else \
+                llama_walk_two
+
+        screen.blit(current_sprite, block)
 
         # Gravity + Jump physics
         if jumping:
@@ -146,15 +187,25 @@ def game_loop():
         llama_hitbox = pygame.Rect(llama_x + 3, llama_y + 5,
                                    llama_width - 6, llama_height - 10)
         # Adjusting for hitbox issues
-        pygame.draw.rect(screen, red, llama_hitbox, 2)  # For hitbox testing
 
-        min_cactus_gap = 150  # minimum pixels between cacti
+        min_cactus_gap = 50  # minimum pixels between cacti
         spawn_timer += 1
         if spawn_timer > spawn_delay:
             if not cacti or cacti[-1]["x"] < (800 - min_cactus_gap):
                 cactus_x = 800 + random.randint(0, 100)
                 cacti.append({"x": cactus_x, "y": 220})
                 spawn_timer = 0
+        # Calculate score as seconds passed since start of game
+        current_time = pygame.time.get_ticks()
+        score = (current_time - start_time) // 1000  # Convert ms to seconds
+        # Increase scroll speed every 10 seconds, but cap it at a max speed
+        if score % speed_increase_interval == 0 and score != 0:
+            scroll_speed = min(max_scroll_speed,
+                               5 + score // speed_increase_interval)
+        player_score(score, black, high_score)  # Show score on screen
+
+        #  Get high score
+        high_score = update_high_score(score, high_score)
 
         # Move and draw cacti blocks
         for cactus in cacti[:]:
@@ -162,7 +213,6 @@ def game_loop():
             cactus_rect = pygame.Rect(cactus["x"], cactus["y"], cactus_width,
                                       cactus_height)
             screen.blit(cactus_img, (cactus["x"], cactus["y"]))
-            pygame.draw.rect(screen, black, cactus_rect, 2)  # Hitbox testing
 
             # Collision detection
             if llama_hitbox.colliderect(cactus_rect):

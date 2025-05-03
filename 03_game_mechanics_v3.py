@@ -93,8 +93,18 @@ while not quit_game:
         pygame.draw.rect(screen, cactus_color, cactus_rect)
         # Check collision
         if llama_rect.colliderect(cactus_rect):
-            print("Collision detected!")  # For now just print
-            quit_game = True  # Optionally end game on collision
+            print("Collision detected!")  # For testing
+            # Draw red outline around both rects for visibility
+            pygame.draw.rect(screen, red, llama_rect, 3)
+            pygame.draw.rect(screen, red, cactus_rect, 3)
+
+            pygame.display.update()
+
+            # Pause for 2 seconds to see the collision
+            pygame.time.delay(2000)  # In milliseconds
+
+            quit_game = True
+
     pygame.display.update()
     clock.tick(60)  # Maximum of 60 fps (frames per second)
 
